@@ -149,6 +149,12 @@ with c1:
     ax.set_xlabel("Date"); ax.set_ylabel("Close")
     fig.tight_layout()
     st.pyplot(fig)
+    st.caption("""
+This line chart visualizes the daily closing price of the SPY index, which tracks the S&P 500. 
+It provides context for the overall market movement during the selected date range. 
+A steady upward trend suggests bullish market conditions, while steep drops indicate periods of correction or volatility.
+""")
+
 with c2:
     st.subheader("Daily Mean Sentiment")
     fig, ax = plt.subplots(figsize=(8,3))
@@ -214,23 +220,40 @@ with c6:
     fig.tight_layout()
     st.pyplot(fig)
 
-# ---------- Optional model snapshot ----------
+# ---------- Model Snapshot & Explanation ----------
 st.markdown("---")
-st.subheader("Optional: Model Snapshot")
-if os.path.exists(MODEL_PATH):
+st.subheader("🧠 Sentiment Model Snapshot")
+
+if os.path.exists("models/sentiment_baseline.pkl"):
+    st.markdown("""
+    This section shows information about the **Financial Sentiment Model**
+    trained in **Notebook 01** using the *Financial PhraseBank* dataset.
+    The model uses a **TF-IDF vectorizer** and **Logistic Regression** to classify
+    sentences as **positive**, **neutral**, or **negative**.
+    """)
+
     try:
-        model = joblib.load(MODEL_PATH)
-        st.write("Loaded model:", type(model).__name__)
-        if hasattr(model, "feature_importances_"):
-            imp = pd.Series(model.feature_importances_,
-                            index=["sent_mean","sent_count","sent_max","return_1d","ma_5","vol_5"]).sort_values(ascending=False)
-            st.dataframe(imp.to_frame("importance"))
-        else:
-            st.info("This model type does not expose feature_importances_.")
+        model = joblib.load("models/sentiment_baseline.pkl")
+        st.success("Sentiment model successfully loaded from models/sentiment_baseline.pkl")
+
+        st.markdown("""
+        **Model Type:** Logistic Regression  
+        **Vectorizer:** TF-IDF (max features = 5000)  
+        **Purpose:** Predict the tone of financial news headlines or sentences.  
+        """)
+        st.info("""
+        Although this dashboard currently focuses on market-level correlations,
+        this model can be extended to generate daily sentiment automatically from new headlines.
+        """)
     except Exception as e:
-        st.warning(f"Could not load model: {e}")
+        st.warning(f"Could not load sentiment model: {e}")
 else:
-    st.info("No trained next-day model found at models/next_day_model.pkl (will appear after Notebook 03).")
+    st.info("""
+    The trained **sentiment model** is not required for dashboard operation,
+    but when available it provides richer analytics and automated news scoring.
+    To include it, ensure that `models/sentiment_baseline.pkl` exists.
+    """)
+
 
 st.markdown("---")
 st.caption("""
