@@ -18,8 +18,9 @@ st.set_page_config(page_title="News→Signal Dashboard", layout="wide")
 # ------------------- Portfolio Header -------------------
 st.title("📰 News→Signal: Financial Sentiment & Market Insight")
 st.markdown("""
-### **Student:** Emmanuel Abolade  
-**Institution:** South East Technological University  
+### **Name:** Emmanuel Abolade  
+**Institution:** South East Technological University 
+**Course:** Software Development 
 **Module:** Data Science & Machine Learning Portfolio  
 **Date:** November 2025  
 
@@ -322,6 +323,50 @@ else:
     but when available it provides richer analytics and automated news scoring.
     To include it, ensure that `models/sentiment_baseline.pkl` exists.
     """)
+
+st.markdown("---")
+with st.expander("**Live Prototype: Generate Sentiment from Today’s Headlines**", expanded=False):
+    st.markdown("""
+    This section demonstrates how this project can evolve into a **production-ready application**.
+    Instead of relying on static CSV files, the model can fetch *live financial headlines*,
+    analyze them in real-time using the trained sentiment model, and generate updated daily sentiment scores.
+    """)
+
+    if os.path.exists("models/sentiment_baseline.pkl"):
+        model = joblib.load("models/sentiment_baseline.pkl")
+
+        # --- Try to fetch live business headlines (requires internet connection) ---
+        try:
+            import yfinance as yf
+            import requests
+            import pandas as pd
+            from datetime import datetime
+
+            api_url = "https://newsapi.org/v2/top-headlines"
+            params = {
+                "category": "business",
+                "language": "en",
+                "apiKey": st.secrets.get("NEWS_API_KEY", "DEMO_KEY")  # optional secret key
+            }
+            response = requests.get(api_url, params=params)
+            if response.status_code == 200:
+                data = response.json()
+                headlines = [a["title"] for a in data["articles"] if a["title"]]
+                df_live = pd.DataFrame({"headline": headlines})
+                st.write(f"Fetched {len(df_live)} live headlines.")
+                preds = model.predict(df_live["headline"])
+                df_live["sentiment"] = preds
+                st.dataframe(df_live.head(10))
+
+                st.success("Real-time sentiment predictions generated.")
+            else:
+                st.warning("Could not fetch live news — API key or internet may be missing.")
+
+        except Exception as e:
+            st.warning(f"Live fetch unavailable: {e}")
+    else:
+        st.info("The live sentiment model requires models/sentiment_baseline.pkl to be available.")
+
 
 
 st.markdown("---")
