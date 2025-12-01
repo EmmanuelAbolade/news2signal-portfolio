@@ -346,9 +346,9 @@ with st.expander("**Live Prototype: Generate Sentiment from Today’s Headlines*
             from datetime import datetime
 
             # --- diagnostic block ---
-    st.sidebar.write("Secrets content:", dict(st.secrets))
-    api_key_value = st.secrets.get("NEWS_API_KEY")
-    st.sidebar.write("NEWS_API_KEY:", api_key_value)
+            st.sidebar.write("Secrets content:", dict(st.secrets))
+            api_key_value = st.secrets.get("NEWS_API_KEY")
+            st.sidebar.write("NEWS_API_KEY:", api_key_value)
             
             api_url = "https://newsapi.org/v2/top-headlines"
             params = {
