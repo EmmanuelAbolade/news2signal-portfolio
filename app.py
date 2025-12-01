@@ -126,6 +126,26 @@ if dff.empty:
     st.warning("No rows in the selected date range.")
     st.stop()
 
+# ---------- Sidebar: Select Ticker for Display ----------
+st.sidebar.header("Market Selection")
+available_tickers = ["SPY", "AAPL", "MSFT", "AMZN", "GOOG", "TSLA"]
+ticker = st.sidebar.selectbox("Choose Ticker", available_tickers, index=0)
+
+# Download fresh price data for selected ticker (using same date range)
+px = yf.download(ticker, start=str(f_start), end=str(f_end), auto_adjust=True).reset_index()
+
+# Merge new prices with your sentiment dataset (same date window)
+if "Close" in px.columns:
+    px = px.rename(columns={"Date": "date", "Close": "close"})
+elif "Adj Close" in px.columns:
+    px = px.rename(columns={"Date": "date", "Adj Close": "close"})
+px["date"] = pd.to_datetime(px["date"]).dt.date
+
+# Replace the 'close' column in dff with new ticker prices
+dff = pd.merge(dff, px[["date", "close"]], on="date", how="left", suffixes=("_old", ""))
+dff["close"] = dff["close"].fillna(method="ffill")
+
+
 # ---------- Top metrics ----------
 col1, col2, col3, col4 = st.columns(4)
 with col1:
@@ -143,7 +163,7 @@ st.markdown("---")
 # ---------- Row 1: Price & Sentiment ----------
 c1, c2 = st.columns(2)
 with c1:
-    st.subheader("SPY Close Price (adjusted)")
+    st.subheader(f"{ticker} Close Price (adjusted)")
     fig, ax = plt.subplots(figsize=(8,3))
     ax.plot(dff["date"], dff["close"])
     ax.set_xlabel("Date"); ax.set_ylabel("Close")
@@ -156,35 +176,54 @@ A steady upward trend suggests bullish market conditions, while steep drops indi
 """)
 
 with c2:
-    st.subheader("Daily Mean Sentiment")
+    st.subheader(f"{ticker} Close Price (adjusted)")
     fig, ax = plt.subplots(figsize=(8,3))
     ax.plot(dff["date"], dff["sent_mean"])
     ax.set_xlabel("Date"); ax.set_ylabel("sent_mean")
     fig.tight_layout()
     st.pyplot(fig)
+    st.caption("""
+This plot captures the average sentiment of financial headlines per day, as computed by the sentiment analysis model. 
+Higher values represent more positive news tone (optimism in markets), while lower values reflect negative or cautious outlooks. 
+Fluctuations here often mirror investor mood and anticipation around earnings, policy decisions, or economic reports.
+""")
+
 
 # ---------- Row 2: Headline count & class distribution ----------
 c3, c4 = st.columns(2)
 with c3:
-    st.subheader("Headline Count per Day")
+    st.subheader(f"{ticker} Close Price (adjusted)")
     fig, ax = plt.subplots(figsize=(8,3))
     ax.bar(dff["date"], dff["sent_count"])
     ax.set_xlabel("Date"); ax.set_ylabel("sent_count")
     fig.tight_layout()
     st.pyplot(fig)
+    st.caption("""
+This bar chart indicates how many news headlines were recorded each day in the dataset. 
+Spikes in headline volume usually correspond to major financial events, policy announcements, or corporate earnings seasons. 
+Periods with high news intensity can drive short-term market volatility and sentiment swings.
+""")
+
+
 with c4:
-    st.subheader("Next-Day Direction (0/1)")
+    st.subheader(f"{ticker} Close Price (adjusted)")
     fig, ax = plt.subplots(figsize=(5,3))
     counts = dff["next_day_direction"].value_counts().sort_index()
     ax.bar(counts.index.astype(str), counts.values)
     ax.set_xlabel("Class"); ax.set_ylabel("Count")
     fig.tight_layout()
     st.pyplot(fig)
+    st.caption("""
+This histogram displays the distribution of the target variable — market direction for the following day. 
+A balanced dataset (roughly equal 0s and 1s) ensures fair model learning, while imbalance could bias predictions toward one class. 
+Here, Class 1 indicates a price increase and Class 0 represents a price decline.
+""")
+
 
 # ---------- Row 3: Sentiment vs Return & Correlation ----------
 c5, c6 = st.columns(2)
 with c5:
-    st.subheader("Sentiment vs Next-Day Return")
+    st.subheader(f"{ticker} Close Price (adjusted)")
     dff["next_day_return"] = (dff["close_t+1"] / dff["close"]) - 1
 
     # Drop NaN or infinite values before regression
@@ -207,9 +246,15 @@ with c5:
 
     fig.tight_layout()
     st.pyplot(fig)
+    st.caption("""
+Each point represents one trading day, plotting daily sentiment against the next day's percentage return. 
+The orange trend line shows the general relationship: when sentiment is more positive, the market tends to deliver slightly higher returns the next day. 
+Although not perfectly predictive, this pattern hints that investor optimism captured in headlines may carry over into short-term market momentum.
+""")
+
 
 with c6:
-    st.subheader("Feature Correlation")
+    st.subheader(f"{ticker} Close Price (adjusted)")
     feat_cols = ["sent_mean","sent_count","sent_max","return_1d","ma_5","vol_5","next_day_direction"]
     corr = dff[feat_cols].corr()
     fig, ax = plt.subplots(figsize=(5,4))
@@ -219,10 +264,16 @@ with c6:
     fig.colorbar(im, ax=ax)
     fig.tight_layout()
     st.pyplot(fig)
+    st.caption("""
+This correlation heatmap quantifies how sentiment and technical features relate to market outcomes. 
+For instance, strong correlations between `sent_mean` and `next_day_direction` suggest that news tone may contain predictive signals. 
+Weaker correlations with volatility or moving averages reveal where sentiment diverges from technical indicators.
+""")
+
 
 # ---------- Model Snapshot & Explanation ----------
 st.markdown("---")
-st.subheader("🧠 Sentiment Model Snapshot")
+st.subheader("Sentiment Model Snapshot")
 
 if os.path.exists("models/sentiment_baseline.pkl"):
     st.markdown("""
