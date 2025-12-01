@@ -10,6 +10,71 @@ import joblib
 import streamlit as st
 import matplotlib.pyplot as plt
 from datetime import date
+import yfinance as yf
+
+# ---------- Page config ----------
+st.set_page_config(page_title="News→Signal Dashboard", layout="wide")
+
+# ------------------- Portfolio Header -------------------
+st.title("📰 News→Signal: Financial Sentiment & Market Insight")
+st.markdown("""
+### **Student:** Emmanuel Abolade  
+**Institution:** South East Technological University  
+**Module:** Data Science & Machine Learning Portfolio  
+**Date:** November 2025  
+
+---
+
+This portfolio demonstrates the application of **Data Science** and **Machine Learning**
+to explore how financial news sentiment influences stock market movements.
+
+It includes:
+- A sentiment analysis model trained on the *Financial PhraseBank* dataset.  
+- Integration of daily news sentiment with market data (SPY, AAPL, etc.).  
+- Visual analytics through this interactive Streamlit dashboard.  
+- Real-time price tracking powered by Yahoo Finance.  
+
+---
+
+**Aim:**  
+To evaluate whether daily financial news sentiment can serve as a signal 
+for predicting short-term market direction.
+
+---
+""")
+
+# ---------- About this Portfolio (expandable section) ----------
+with st.expander("ℹ️ **About this Portfolio**", expanded=False):
+    st.markdown("""
+    ### Overview  
+    This project, **News→Signal**, demonstrates how **Data Science** and **Machine Learning** 
+    can be applied to **financial text analysis** — exploring how the *sentiment* of daily 
+    financial news correlates with *market price movements*.
+
+    ### What This App Shows  
+    - The relationship between **daily sentiment** and **next-day stock direction**.  
+    - Interactive charts showing **price trends**, **headline counts**, and **sentiment strength**.  
+    - Correlation analysis between **news sentiment** and **market returns**.  
+    - Real-time stock snapshots from Yahoo Finance.
+
+    ### Workflow Summary  
+    - **Notebook 01** → Trained a sentiment classifier using the *Financial PhraseBank* dataset.  
+    - **Notebook 02** → Merged sentiment with market data to build a unified dataset.  
+    - **Streamlit Dashboard** → Visualizes both datasets and provides live updates.  
+
+    ### Key Tools  
+    - **Python**, **Pandas**, **NumPy**, **Scikit-Learn**, **YFinance**, **Matplotlib**, and **Streamlit**.  
+
+    ### Interpretation  
+    Periods of higher **positive sentiment** often correlate with an **increase** in next-day 
+    returns, while negative sentiment tends to precede price drops.  
+    The model and charts here help visualize that subtle relationship.
+
+    ---
+    **Created by:** *Emmanuel Abolade (SETU Carlow)*  
+    **Portfolio Date:** November 2025  
+    """)
+
 
 DATA_PATH = os.path.join("data", "processed", "market_dataset.csv")
 MODEL_PATH = os.path.join("models", "next_day_model.pkl")  # optional
@@ -167,4 +232,9 @@ if os.path.exists(MODEL_PATH):
 else:
     st.info("No trained next-day model found at models/next_day_model.pkl (will appear after Notebook 03).")
 
-st.caption("© 2025 News→Signal Portfolio • Built with Streamlit")
+st.markdown("---")
+st.caption("""
+**© 2025 – News→Signal Portfolio by Emmanuel Abolade**  
+Built with using Streamlit, Pandas, Scikit-Learn, and YFinance.
+""")
+
