@@ -12,8 +12,6 @@ import matplotlib.pyplot as plt
 from datetime import date
 import yfinance as yf
 
-st.sidebar.info(f"API key detected: {bool(st.secrets.get('NEWS_API_KEY'))}")
-
 
 # ---------- Page config ----------
 st.set_page_config(page_title="News→Signal Dashboard", layout="wide")
