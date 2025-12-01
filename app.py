@@ -134,16 +134,34 @@ ticker = st.sidebar.selectbox("Choose Ticker", available_tickers, index=0)
 # Download fresh price data for selected ticker (using same date range)
 px = yf.download(ticker, start=str(f_start), end=str(f_end), auto_adjust=True).reset_index()
 
-# Merge new prices with your sentiment dataset (same date window)
-if "Close" in px.columns:
-    px = px.rename(columns={"Date": "date", "Close": "close"})
-elif "Adj Close" in px.columns:
-    px = px.rename(columns={"Date": "date", "Adj Close": "close"})
-px["date"] = pd.to_datetime(px["date"]).dt.date
+# --- Clean up any multi-index columns before merging ---
+if isinstance(px.columns, pd.MultiIndex):
+    px.columns = ['_'.join([str(c) for c in col if c not in (None, '')]) for col in px.columns]
 
-# Replace the 'close' column in dff with new ticker prices
-dff = pd.merge(dff, px[["date", "close"]], on="date", how="left", suffixes=("_old", ""))
-dff["close"] = dff["close"].fillna(method="ffill")
+if isinstance(dff.columns, pd.MultiIndex):
+    dff.columns = ['_'.join([str(c) for c in col if c not in (None, '')]) for col in dff.columns]
+
+# --- Normalize date and close columns ---
+if "Close" in px.columns:
+    close_col = "Close"
+elif "Adj Close" in px.columns:
+    close_col = "Adj Close"
+else:
+    close_candidates = [c for c in px.columns if str(c).lower().endswith("close")]
+    close_col = close_candidates[0] if close_candidates else None
+
+if close_col:
+    px = px.rename(columns={"Date": "date", close_col: "close"})[["date", "close"]].copy()
+    px["date"] = pd.to_datetime(px["date"]).dt.date
+
+    # --- Merge safely ---
+    if "date" in dff.columns:
+        dff = pd.merge(dff, px, on="date", how="left", suffixes=("", "_new"))
+        dff["close"] = dff["close_new"].fillna(dff["close"])
+        dff.drop(columns=["close_new"], inplace=True, errors="ignore")
+else:
+    st.warning(f"No close column found for {ticker}, skipping merge.")
+
 
 
 # ---------- Top metrics ----------
