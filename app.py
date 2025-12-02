@@ -19,10 +19,14 @@ st.set_page_config(page_title="News→Signal Dashboard", layout="wide")
 # ------------------- Portfolio Header -------------------
 st.title("📰 News→Signal: Financial Sentiment & Market Insight")
 st.markdown("""
-### **Name:** Emmanuel Abolade  
-**Institution:** South East Technological University 
+### **Name:** Emmanuel Abolade
+
+**Institution:** South East Technological University
+
 **Course:** Software Development 
-**Module:** Data Science & Machine Learning Portfolio  
+
+**Module:** Data Science & Machine Learning Portfolio
+
 **Date:** November 2025  
 
 ---
